@@ -9,11 +9,24 @@ and inference.
 
 Current core settings:
 
-- input size: `250 x 250` RGB images
+- input size: `250 x 250` RGB images, matching the tile size produced by the
+  dataset tooling
 - backbone: EfficientNetB0 with ImageNet weights
 - default decision threshold: `0.55`
 - training augmentation: horizontal flip, light rotation, zoom, translation,
   brightness, contrast, and probabilistic grayscale conversion
+
+## Dataset Contribution
+
+The positive class examples were contributed by classmates Sinan, Fabian, Mike,
+Joel, Lars, and Neel. The negative class was manually filtered by Frederick
+Urbel from roughly 20,000 candidate images down to the current dataset.
+
+## AI Assistance Disclosure
+
+Codex and ChatGPT were used as assistance tools during project development,
+documentation, and review. The project decisions, dataset filtering, and final
+responsibility remain with the author.
 
 ## Repository Contents
 

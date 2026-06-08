@@ -26,6 +26,12 @@ Pedestrian paths can vary strongly in color, texture, lighting, perspective, sur
 
 Training a CNN from scratch usually requires a very large dataset and substantial compute resources. Transfer learning reuses a backbone pretrained on ImageNet. The pretrained network already contains useful low-level and mid-level visual features such as edges, corners, textures, shapes, and object parts. The project only needs to learn how these features relate to the pedestrian-path classification task. This improves data efficiency, reduces training time, and usually gives better generalization for university-scale datasets.
 
+## AI Assistance Disclosure
+
+Codex and ChatGPT were used as assistance tools during project development,
+documentation, and review. The project decisions, dataset filtering, and final
+responsibility remain with the author.
+
 ## B. Dataset Documentation
 
 ### Dataset Structure
@@ -55,6 +61,13 @@ dataset/
 ```
 
 The `yes` folder is mapped to `positive`, and the `no` folder is mapped to `negative`.
+
+### Dataset Contribution
+
+The positive class examples were contributed by classmates Sinan, Fabian, Mike,
+Joel, Lars, and Neel. Frederick Urbel reused these positive examples for this
+project. The negative class was manually filtered by Frederick Urbel from
+roughly 20,000 candidate negative images down to the current dataset.
 
 ### Class Distribution
 
@@ -113,11 +126,15 @@ If several images are near-duplicates or come from the same geographic scene, a 
 
 ### Image Size Choice
 
-All images are explicitly resized to `250 x 250` pixels. EfficientNetB0 accepts this configured input size with pretrained ImageNet weights. Using a fixed size is necessary because neural networks process tensors with consistent dimensions.
+All images are explicitly resized to `250 x 250` pixels. This matches the
+standard tile size produced by the dataset tooling. EfficientNetB0 accepts this
+configured input size with pretrained ImageNet weights. Using a fixed size is
+necessary because neural networks process tensors with consistent dimensions.
 
 ### Why 250 x 250 Was Selected
 
-`250 x 250` is a practical compromise:
+`250 x 250` was retained because it is the standard size of the generated input
+tiles and is also a practical compromise:
 
 - large enough to preserve meaningful scene information
 - small enough for efficient training

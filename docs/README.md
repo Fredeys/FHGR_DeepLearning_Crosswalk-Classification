@@ -11,11 +11,6 @@ classification project.
     fine-tuning, evaluation, inference, metrics, error analysis, and
     reproducibility.
 
-- [EXAM_PREPARATION.md](EXAM_PREPARATION.md)
-  - Oral and written exam preparation.
-  - Contains likely professor questions, strong answers, debugging questions,
-    criticism questions, and "what would happen if..." scenarios.
-
 ## Code Explanations
 
 Each numbered Python file has a matching explanation in
@@ -34,4 +29,3 @@ Recommended reading order:
 
 1. Read `PROJECT_DOCUMENTATION.md` for the complete methodology.
 2. Read the code explanations in numeric order.
-3. Use `EXAM_PREPARATION.md` for defense and revision.
