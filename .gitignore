@@ -1,0 +1,21 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+.matplotlib_cache/
+.ipynb_checkpoints/
+
+# Local datasets and generated splits are too large for GitHub.
+DeepL_Datenset/
+dataset/
+
+# Training outputs and model artifacts.
+artifacts/
+*.keras
+*.h5
+*.weights.h5
+
+# Local environments and secrets.
+.env
+.venv/
+venv/
