@@ -27,7 +27,7 @@ Finds valid image files. Can search recursively or only directly inside the fold
 Applies the same core inference preprocessing as evaluation:
 
 - RGB
-- `224 x 224`
+- `250 x 250`
 - bilinear interpolation
 - `0-255` pixel range
 
@@ -67,4 +67,3 @@ Inference is separated from evaluation because new data has no labels and should
 - The final model must exist before inference.
 - A threshold that is too low may copy too many false positives.
 - Input images should be representative of the training domain.
-

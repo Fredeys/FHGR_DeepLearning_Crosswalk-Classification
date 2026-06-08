@@ -22,7 +22,7 @@ Lists all test images with labels. This is intentionally limited to the test spl
 
 ### `load_image_batch(paths)`
 
-Loads RGB images with `224 x 224` bilinear resizing and `0-255` values.
+Loads RGB images with `250 x 250` bilinear resizing and `0-255` values.
 
 ### `predict_probabilities(...)`
 
@@ -93,4 +93,3 @@ Evaluation is isolated from training. The test set is only used here to avoid le
 
 - Running evaluation repeatedly while changing model decisions can indirectly tune on the test set.
 - Threshold choice should be justified using validation data or deployment priorities.
-

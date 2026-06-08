@@ -8,13 +8,13 @@ This file defines deterministic Keras/TensorFlow data pipelines for training, va
 
 1. Validate dataset folders.
 2. Load images from directories.
-3. Resize all images to `224 x 224`.
+3. Resize all images to `250 x 250`.
 4. Apply augmentation only to training batches.
 5. Prefetch datasets for performance.
 
 ## Important Constants
 
-- `IMAGE_SIZE = (224, 224)`
+- `IMAGE_SIZE = (250, 250)`
 - `BATCH_SIZE = 32`
 - `SEED = 42`
 - `CLASS_NAMES = ["negative", "positive"]`
@@ -45,6 +45,7 @@ Builds the training-only augmentation pipeline:
 - slight translation
 - slight brightness change
 - slight contrast change
+- probabilistic grayscale conversion
 
 These transformations are moderate to avoid destroying pedestrian-path semantics.
 
@@ -54,7 +55,7 @@ Uses `tf.keras.utils.image_dataset_from_directory` with:
 
 - RGB color mode
 - binary labels
-- explicit `224 x 224` image size
+- explicit `250 x 250` image size
 - bilinear interpolation
 - optional shuffle
 
@@ -86,4 +87,3 @@ The test set is isolated. Validation and test data are deterministic. Augmentati
 
 - Changing `CLASS_NAMES` changes label mapping.
 - Adding manual normalization would duplicate EfficientNet preprocessing assumptions.
-

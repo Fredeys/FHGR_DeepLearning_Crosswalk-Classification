@@ -7,7 +7,7 @@ This script creates a reproducible train/validation/test split from the original
 ## Workflow
 
 1. Validate source folders.
-2. Collect valid images with extensions `.jpg`, `.jpeg`, `.png`, `.webp`.
+2. Collect valid images with the configured extension `.png`.
 3. Shuffle each class deterministically.
 4. Split each class into `70/15/15`.
 5. Copy files into `dataset/train`, `dataset/val`, and `dataset/test`.
@@ -76,4 +76,3 @@ The split is stratified by class so that all splits contain representative posit
 
 - Existing target files are not deleted.
 - Exact image overlap is prevented, but grouped geographic leakage is not fully solved without group metadata.
-
