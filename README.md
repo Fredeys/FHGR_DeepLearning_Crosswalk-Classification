@@ -7,6 +7,14 @@ The project contains a reproducible TensorFlow/Keras workflow for dataset
 splitting, preprocessing, transfer-learning training, fine-tuning, evaluation,
 and inference.
 
+Current core settings:
+
+- input size: `250 x 250` RGB images
+- backbone: EfficientNetB0 with ImageNet weights
+- default decision threshold: `0.55`
+- training augmentation: horizontal flip, light rotation, zoom, translation,
+  brightness, contrast, and probabilistic grayscale conversion
+
 ## Repository Contents
 
 - `01_split_dataset.py` - create train/validation/test splits

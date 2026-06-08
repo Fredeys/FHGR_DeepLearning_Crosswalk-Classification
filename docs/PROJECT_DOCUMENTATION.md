@@ -9,10 +9,10 @@ The goal of this project is to build a reproducible deep learning pipeline that 
 - `positive`: pedestrian path present
 - `negative`: no pedestrian path present
 
-The model outputs a sigmoid probability `p` for the positive class. By default, the decision threshold is `0.5`:
+The model outputs a sigmoid probability `p` for the positive class. By default, the decision threshold is `0.55`:
 
-- `p >= 0.5`: pedestrian path present
-- `p < 0.5`: no pedestrian path present
+- `p >= 0.55`: pedestrian path present
+- `p < 0.55`: no pedestrian path present
 
 ### Why This Is a Binary Image Classification Problem
 
@@ -99,7 +99,7 @@ Data leakage occurs when information from validation or test data influences tra
 - saving a manifest file with every image assignment
 - applying augmentation only to the training split
 - computing class weights only from the training split
-- using the test set only in `06_evaluate_final_model.py`
+- not using the test set for training or model selection; final reporting is done in `06_evaluate_final_model.py`
 
 ### Why Stratified Split Was Used
 
@@ -113,15 +113,15 @@ If several images are near-duplicates or come from the same geographic scene, a 
 
 ### Image Size Choice
 
-All images are explicitly resized to `224 x 224` pixels. EfficientNetB0 is commonly used with this input size, and the pretrained ImageNet weights are compatible with it. Using a fixed size is necessary because neural networks process tensors with consistent dimensions.
+All images are explicitly resized to `250 x 250` pixels. EfficientNetB0 accepts this configured input size with pretrained ImageNet weights. Using a fixed size is necessary because neural networks process tensors with consistent dimensions.
 
-### Why 224 x 224 Was Selected
+### Why 250 x 250 Was Selected
 
-`224 x 224` is a practical compromise:
+`250 x 250` is a practical compromise:
 
 - large enough to preserve meaningful scene information
 - small enough for efficient training
-- compatible with EfficientNetB0 defaults
+- compatible with EfficientNetB0 transfer learning
 - widely used in transfer-learning workflows
 
 Larger images might preserve more detail but increase memory usage and training time. Smaller images might lose path structure and scene context.
@@ -135,7 +135,7 @@ Bilinear interpolation is used. It is deterministic, efficient, and produces smo
 The Keras image loader returns RGB tensors with shape:
 
 ```text
-(batch_size, 224, 224, 3)
+(batch_size, 250, 250, 3)
 ```
 
 Images remain in the `0-255` pixel range. No manual scaling to `0-1` and no custom mean/std normalization are applied because Keras EfficientNetB0 includes its expected preprocessing behavior internally.
@@ -165,6 +165,7 @@ The training pipeline uses moderate augmentation:
 - slight translation: handles small spatial shifts
 - slight brightness change: handles lighting differences
 - slight contrast change: handles contrast variation
+- probabilistic grayscale conversion: encourages reliance on structure and geometry instead of color alone
 
 Aggressive distortions, strong crops, random erasing, mixup, strong blur, and artificial artifacts are avoided because they can destroy or alter the semantic structure of pedestrian paths.
 
@@ -232,7 +233,7 @@ It maps the raw logit to a probability-like value between 0 and 1.
 
 ### Thresholding
 
-The default threshold is `0.5`. Threshold analysis is implemented because the best threshold depends on the desired tradeoff between precision and recall.
+The default threshold is `0.55`. Threshold analysis is implemented because the best threshold depends on the desired tradeoff between precision and recall.
 
 ## E. Keras Functional API
 
@@ -482,7 +483,7 @@ Reproducibility is essential in machine learning because results can otherwise b
 `07_inference.py` loads the final best model and predicts on a new folder of images. It applies the same core preprocessing:
 
 - RGB loading
-- `224 x 224` target size
+- `250 x 250` target size
 - bilinear interpolation
 - `0-255` pixel range
 
@@ -493,7 +494,7 @@ It saves:
 - copied positive images
 - a static positive prediction grid
 
-The threshold defaults to `0.5` but can be changed.
+The threshold defaults to `0.55` but can be changed.
 
 ## M. Final Reflection
 
@@ -524,4 +525,3 @@ The threshold defaults to `0.5` but can be changed.
 - model comparison with ResNet, MobileNet, ConvNeXt, or EfficientNetV2
 - threshold calibration based on real deployment priorities
 - probability calibration using validation data
-
