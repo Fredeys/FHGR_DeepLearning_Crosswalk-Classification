@@ -16,6 +16,7 @@ classification project.
 Each numbered Python file has a matching explanation in
 [code_explanations/](code_explanations/):
 
+- [00_baseline.md](code_explanations/00_baseline.md)
 - [01_split_dataset.md](code_explanations/01_split_dataset.md)
 - [02_preprocessing.md](code_explanations/02_preprocessing.md)
 - [03_model.md](code_explanations/03_model.md)

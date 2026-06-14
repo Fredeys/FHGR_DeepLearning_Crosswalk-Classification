@@ -16,6 +16,11 @@ Current core settings:
 - training augmentation: horizontal flip, light rotation, zoom, translation,
   brightness, contrast, and probabilistic grayscale conversion
 
+The threshold `0.55` is used consistently for evaluation and inference. It is a
+slightly stricter positive decision than `0.50`, chosen to reduce false
+positives while keeping recall high; the saved threshold analysis should be used
+to justify or change this tradeoff for a specific deployment setting.
+
 ## Dataset Contribution
 
 The positive class examples were contributed by classmates Sinan, Fabian, Mike,
@@ -30,6 +35,7 @@ responsibility remain with the author.
 
 ## Repository Contents
 
+- `00_baseline.py` - compute a majority-class baseline from the training split
 - `01_split_dataset.py` - create train/validation/test splits
 - `02_preprocessing.py` - preprocessing and TensorFlow datasets
 - `03_model.py` - model architecture

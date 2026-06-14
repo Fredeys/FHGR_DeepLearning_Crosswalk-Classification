@@ -14,6 +14,14 @@ The model outputs a sigmoid probability `p` for the positive class. By default, 
 - `p >= 0.55`: pedestrian path present
 - `p < 0.55`: no pedestrian path present
 
+The project uses `0.55` consistently in configuration, documentation,
+evaluation, and inference. This is deliberately stricter than the neutral
+`0.50` threshold: it slightly reduces false positives, which is useful when
+positive predictions are reviewed as candidate pedestrian paths. The threshold
+is not treated as universally optimal. It must be justified with the saved
+threshold analysis and can be changed if a deployment scenario values recall
+more than precision.
+
 ### Why This Is a Binary Image Classification Problem
 
 Each input image receives exactly one target label from two mutually exclusive classes. The task is therefore not object detection, because the model does not predict bounding boxes. It is also not semantic segmentation, because the model does not produce a pixel-level mask of the path. It answers a global image-level question: does this image contain a pedestrian path?
@@ -121,6 +129,24 @@ A stratified split preserves the class ratio in train, validation, and test sets
 ### Why Grouped Split Matters
 
 If several images are near-duplicates or come from the same geographic scene, a random image-level split can put very similar examples into both train and test sets. This can make the model look better than it truly is because the test set is no longer independent. A grouped split would ensure all images from the same location, tile group, or acquisition source remain in the same split. The current implementation prevents exact image overlap, but grouped splitting would be a valuable future improvement if geographic or scene group identifiers are available.
+
+The file names appear to encode tile-like coordinate identifiers. This makes
+grouped leakage a concrete risk: neighboring tiles can share roads, paths,
+lighting, vegetation, and background structure. A stronger split strategy would
+derive a group ID from a coarser coordinate cell, location identifier, or source
+collection, then assign entire groups to train, validation, or test. Until such
+a grouped split is implemented, reported test metrics should be interpreted as
+image-level generalization, not guaranteed geographic generalization.
+
+### Baseline
+
+`00_baseline.py` computes a majority-class baseline from the training split and
+reports validation and test metrics. This baseline does not inspect image
+pixels; it always predicts the class that occurs most often in training. Its
+purpose is to show the minimum performance that any meaningful image model must
+beat. Because the training split contains more negative than positive samples,
+the baseline is expected to have non-trivial accuracy but zero recall for the
+positive class if it always predicts `negative`.
 
 ## C. Preprocessing Documentation
 
@@ -251,6 +277,13 @@ It maps the raw logit to a probability-like value between 0 and 1.
 ### Thresholding
 
 The default threshold is `0.55`. Threshold analysis is implemented because the best threshold depends on the desired tradeoff between precision and recall.
+
+Threshold selection should be made using validation results or explicit
+deployment costs, not by repeatedly changing the threshold after seeing the
+final test result. The test set should only report the already selected
+threshold. If false negatives become more costly than false positives, a lower
+threshold can be defended; if false positives are more costly, a higher
+threshold can be defended.
 
 ## E. Keras Functional API
 
@@ -478,6 +511,22 @@ This helps identify:
 
 Dataset bias matters because a model can perform well on familiar scenes and fail on new environments.
 
+The evaluation script also exports `error_review_template.csv` with a fixed
+manual taxonomy:
+
+- `lighting_shadow`
+- `perspective_scale`
+- `ambiguous_label`
+- `background_bias`
+- `near_duplicate_or_scene_cluster`
+- `occlusion_or_low_visibility`
+- `domain_shift`
+- `other`
+
+This turns visual error inspection into a more defensible qualitative analysis:
+each error can be assigned a suspected cause, a recommended action, and review
+notes instead of remaining an unstructured screenshot collection.
+
 ## K. Reproducibility
 
 Reproducibility means that another run should produce the same data split, comparable training behavior, and the same documented artifacts under the same environment.
@@ -488,12 +537,19 @@ The project supports reproducibility through:
 - deterministic split creation
 - deterministic validation/test pipelines
 - saved split manifest
+- saved per-image SHA-256 hash manifest
+- saved Git commit and dirty-state metadata when Git is available
 - saved TensorFlow/Keras versions
 - saved hyperparameters
 - saved split counts
 - saved training histories
 
 Reproducibility is essential in machine learning because results can otherwise be caused by randomness rather than methodology.
+
+The pinned `requirements.txt` records the package versions used for the current
+workflow. Seeds still do not guarantee bit-identical results on every machine:
+hardware, operating system, TensorFlow kernels, and low-level numerical
+libraries can introduce small differences.
 
 ## L. Inference on New Data
 
@@ -518,6 +574,7 @@ The threshold defaults to `0.55` but can be changed.
 ### Strengths
 
 - complete reproducible workflow
+- majority-class baseline for a minimum non-learning comparison
 - clear train/validation/test separation
 - transfer learning with pretrained EfficientNetB0
 - class imbalance handling
@@ -530,6 +587,7 @@ The threshold defaults to `0.55` but can be changed.
 
 - classification only says whether a path is present, not where it is
 - grouped splitting is not implemented unless group metadata becomes available
+- current split is image-level, so nearby coordinate tiles may still leak scene context
 - model performance depends on dataset diversity and label quality
 - test evaluation should be run only once after all decisions are fixed
 

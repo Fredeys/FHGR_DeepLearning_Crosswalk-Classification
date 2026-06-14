@@ -67,6 +67,9 @@ Shows positive and negative counts for train, validation, and test.
 ### `save_error_analysis(...)`
 
 Exports false-positive and false-negative CSVs, thumbnails, and image grids.
+The CSVs include error type, confidence bucket, and manual review columns.
+The script also writes `error_review_template.csv` with a fixed taxonomy for
+systematic qualitative error categorization.
 
 ## Outputs
 
@@ -84,10 +87,13 @@ Exports false-positive and false-negative CSVs, thumbnails, and image grids.
 - `artifacts/logs/threshold_analysis.csv`
 - `artifacts/error_analysis/false_positives.csv`
 - `artifacts/error_analysis/false_negatives.csv`
+- `artifacts/error_analysis/error_review_template.csv`
 
 ## Design Reasoning
 
 Evaluation is isolated from training. The test set is only used here to avoid leakage. Static PNGs are used for reproducible reporting.
+The error-review template makes manual inspection auditable because each error
+can be categorized by likely cause instead of being described only informally.
 
 ## Potential Pitfalls
 

@@ -2,13 +2,18 @@
 
 This project follows a reproducible transfer-learning workflow:
 
+0. `00_baseline.py`
+   - Computes a majority-class baseline from the training split.
+   - Reports validation and test metrics without using learned image features.
+   - Provides a minimum reference that the deep model should clearly beat.
+
 1. `01_split_dataset.py`
    - Creates deterministic train/validation/test splits.
    - Writes `dataset_split_manifest.csv`.
 
 2. `02_preprocessing.py`
    - Builds Keras data pipelines.
-   - Uses explicit `224x224` bilinear resizing.
+   - Uses explicit `250x250` bilinear resizing.
    - Applies moderate augmentation only to the training set.
 
 3. `03_model.py`
@@ -56,10 +61,11 @@ Recommended commands:
 
 ```bash
 /opt/anaconda3/bin/python 01_split_dataset.py
+/opt/anaconda3/bin/python 00_baseline.py
 /opt/anaconda3/bin/python 04_train_phase1.py --batch-size 32 --epochs 20
 /opt/anaconda3/bin/python 05_fine_tune.py --batch-size 32 --epochs 15 --learning-rate 1e-5 --unfreeze-last 30
-/opt/anaconda3/bin/python 06_evaluate_final_model.py --threshold 0.5
-/opt/anaconda3/bin/python 07_inference.py /path/to/new/images --threshold 0.5
+/opt/anaconda3/bin/python 06_evaluate_final_model.py --threshold 0.55
+/opt/anaconda3/bin/python 07_inference.py /path/to/new/images --threshold 0.55
 ```
 
 The test set is intentionally used only in `06_evaluate_final_model.py`, after all
