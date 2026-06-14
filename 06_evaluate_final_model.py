@@ -396,18 +396,25 @@ def write_error_csv(
     examples: list[tuple[Path, int, str, float]],
     threshold: float,
     split: str,
+    error_type: str,
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as csv_file:
         writer = csv.DictWriter(
             csv_file,
             fieldnames=[
+                "error_type",
                 "image_path",
                 "filename",
                 "true_label",
                 "predicted_label",
                 "prediction_probability",
+                "confidence_bucket",
                 "split",
+                "review_category",
+                "suspected_issue",
+                "recommended_action",
+                "review_notes",
             ],
         )
         writer.writeheader()
@@ -415,14 +422,41 @@ def write_error_csv(
             predicted_label = CLASS_NAMES[int(probability >= threshold)]
             writer.writerow(
                 {
+                    "error_type": error_type,
                     "image_path": str(path.resolve()),
                     "filename": path.name,
                     "true_label": true_label,
                     "predicted_label": predicted_label,
                     "prediction_probability": float(probability),
+                    "confidence_bucket": confidence_bucket(probability, threshold, predicted_label),
                     "split": split,
+                    "review_category": "",
+                    "suspected_issue": "",
+                    "recommended_action": "",
+                    "review_notes": "",
                 }
             )
+
+
+def confidence_bucket(probability: float, threshold: float, predicted_label: str) -> str:
+    """Bucket errors by how far the probability is from the decision threshold."""
+    distance = abs(probability - threshold)
+    if distance <= 0.05:
+        return "near_threshold"
+    if predicted_label == config.POSITIVE_CLASS_NAME and probability >= 0.85:
+        return "high_confidence"
+    if predicted_label == config.NEGATIVE_CLASS_NAME and probability <= 0.15:
+        return "high_confidence"
+    if distance >= 0.20:
+        return "medium_confidence"
+    return "low_margin"
+
+
+def clear_generated_thumbnails(output_dir: Path) -> None:
+    """Remove stale generated JPG thumbnails before writing a fresh error set."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for path in output_dir.glob("*.jpg"):
+        path.unlink()
 
 
 def save_error_thumbnails(
@@ -430,7 +464,7 @@ def save_error_thumbnails(
     output_dir: Path,
     threshold: float,
 ) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
+    clear_generated_thumbnails(output_dir)
     for index, (path, _true_index, true_label, probability) in enumerate(examples, start=1):
         predicted_label = CLASS_NAMES[int(probability >= threshold)]
         image = tf.keras.utils.load_img(path, color_mode=config.COLOR_MODE, target_size=IMAGE_SIZE)
@@ -440,6 +474,66 @@ def save_error_thumbnails(
             f"_p-{probability:.3f}.jpg"
         )
         tf.keras.utils.save_img(output_dir / thumbnail_name, tf.keras.utils.img_to_array(image))
+
+
+def write_error_review_template(
+    output_path: Path,
+    false_positives: list[tuple[Path, int, str, float]],
+    false_negatives: list[tuple[Path, int, str, float]],
+    threshold: float,
+) -> None:
+    """Write one combined manual review sheet with a fixed error taxonomy."""
+    taxonomy = (
+        "lighting_shadow",
+        "perspective_scale",
+        "ambiguous_label",
+        "background_bias",
+        "near_duplicate_or_scene_cluster",
+        "occlusion_or_low_visibility",
+        "domain_shift",
+        "other",
+    )
+    rows = [("false_positive", item) for item in false_positives]
+    rows.extend(("false_negative", item) for item in false_negatives)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", newline="", encoding="utf-8") as csv_file:
+        writer = csv.DictWriter(
+            csv_file,
+            fieldnames=[
+                "error_type",
+                "image_path",
+                "filename",
+                "true_label",
+                "predicted_label",
+                "prediction_probability",
+                "confidence_bucket",
+                "allowed_review_categories",
+                "review_category",
+                "suspected_issue",
+                "recommended_action",
+                "review_notes",
+            ],
+        )
+        writer.writeheader()
+        for error_type, (path, _true_index, true_label, probability) in rows:
+            predicted_label = CLASS_NAMES[int(probability >= threshold)]
+            writer.writerow(
+                {
+                    "error_type": error_type,
+                    "image_path": str(path.resolve()),
+                    "filename": path.name,
+                    "true_label": true_label,
+                    "predicted_label": predicted_label,
+                    "prediction_probability": float(probability),
+                    "confidence_bucket": confidence_bucket(probability, threshold, predicted_label),
+                    "allowed_review_categories": "|".join(taxonomy),
+                    "review_category": "",
+                    "suspected_issue": "",
+                    "recommended_action": "",
+                    "review_notes": "",
+                }
+            )
 
 
 def save_error_analysis(
@@ -467,10 +561,46 @@ def save_error_analysis(
 
     false_positive_dir = error_analysis_dir / "false_positives"
     false_negative_dir = error_analysis_dir / "false_negatives"
-    write_error_csv(error_analysis_dir / "false_positives.csv", false_positives, threshold, split="test")
-    write_error_csv(error_analysis_dir / "false_negatives.csv", false_negatives, threshold, split="test")
-    write_error_csv(logs_dir / "false_positives.csv", false_positives, threshold, split="test")
-    write_error_csv(logs_dir / "false_negatives.csv", false_negatives, threshold, split="test")
+    write_error_csv(
+        error_analysis_dir / "false_positives.csv",
+        false_positives,
+        threshold,
+        split="test",
+        error_type="false_positive",
+    )
+    write_error_csv(
+        error_analysis_dir / "false_negatives.csv",
+        false_negatives,
+        threshold,
+        split="test",
+        error_type="false_negative",
+    )
+    write_error_csv(
+        logs_dir / "false_positives.csv",
+        false_positives,
+        threshold,
+        split="test",
+        error_type="false_positive",
+    )
+    write_error_csv(
+        logs_dir / "false_negatives.csv",
+        false_negatives,
+        threshold,
+        split="test",
+        error_type="false_negative",
+    )
+    write_error_review_template(
+        error_analysis_dir / "error_review_template.csv",
+        false_positives,
+        false_negatives,
+        threshold,
+    )
+    write_error_review_template(
+        logs_dir / "error_review_template.csv",
+        false_positives,
+        false_negatives,
+        threshold,
+    )
     save_error_thumbnails(false_positives, false_positive_dir, threshold)
     save_error_thumbnails(false_negatives, false_negative_dir, threshold)
 
@@ -506,6 +636,17 @@ possible dataset bias:
 - Perspective: top-down vs oblique views, unusual camera angles, path scale.
 - Urban vs rural environments: sidewalks, roadsides, forest paths, plazas.
 - Repetitive scenes: many near-duplicate tiles or repeated geographic patterns.
+
+Manual review categories are exported in `error_review_template.csv`:
+
+- `lighting_shadow`
+- `perspective_scale`
+- `ambiguous_label`
+- `background_bias`
+- `near_duplicate_or_scene_cluster`
+- `occlusion_or_low_visibility`
+- `domain_shift`
+- `other`
 
 These notes are a qualitative guide; the script surfaces the errors and
 probabilities, while the visual interpretation should be done manually.

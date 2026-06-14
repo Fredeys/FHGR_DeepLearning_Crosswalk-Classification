@@ -21,7 +21,7 @@ import config
 # ---------------------------------------------------------------------------
 
 ENABLE_PREPROCESSING = True
-ENABLE_BASELINE = False
+ENABLE_BASELINE = True
 ENABLE_TRAINING = True
 ENABLE_FINE_TUNING = True
 ENABLE_EVALUATION = True
@@ -37,7 +37,7 @@ ENABLE_INFERENCE = False
 PROJECT_ROOT = config.PROJECT_ROOT
 
 PREPROCESSING_SCRIPT = PROJECT_ROOT / "02_preprocessing.py"
-BASELINE_SCRIPT: Path | None = None
+BASELINE_SCRIPT: Path | None = PROJECT_ROOT / "00_baseline.py"
 TRAINING_SCRIPT = PROJECT_ROOT / "04_train_phase1.py"
 FINE_TUNING_SCRIPT = PROJECT_ROOT / "05_fine_tune.py"
 EVALUATION_SCRIPT = PROJECT_ROOT / "06_evaluate_final_model.py"
@@ -113,7 +113,12 @@ def build_workflow() -> list[Stage]:
             name="2. Baseline calculation",
             enabled=ENABLE_BASELINE,
             script=BASELINE_SCRIPT,
-            note="No baseline script was found in the current project files.",
+            args=(
+                "--dataset-dir",
+                str(config.DATASET_DIR),
+                "--output-dir",
+                str(config.ARTIFACTS_DIR / "baseline"),
+            ),
         ),
         Stage(
             name="3. Training phase 1",
