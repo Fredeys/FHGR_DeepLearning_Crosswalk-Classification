@@ -47,6 +47,7 @@ DEFAULT_NO_GLOBAL_OUTPUT_DIR = config.NO_GLOBAL_OUTPUT_DIR
 DEFAULT_NO_GLOBAL_ALL_PREDICTIONS = DEFAULT_NO_GLOBAL_OUTPUT_DIR / "no_global_predictions.csv"
 DEFAULT_NO_GLOBAL_POSITIVE_PREDICTIONS = DEFAULT_NO_GLOBAL_OUTPUT_DIR / "no_global_positive_predictions.csv"
 DEFAULT_NO_GLOBAL_POSITIVE_IMAGE_DIR = DEFAULT_NO_GLOBAL_OUTPUT_DIR / "positive_predictions"
+MAX_GRID_IMAGES = 32
 
 
 def parse_args() -> argparse.Namespace:
@@ -179,8 +180,9 @@ def plot_positive_inference_grid(
     rows: list[dict[str, object]],
     output_path: Path,
     max_cols: int = 4,
+    max_images: int = MAX_GRID_IMAGES,
 ) -> None:
-    """Save a static grid of all positive predictions."""
+    """Save a bounded static grid of positive predictions."""
     positive_rows = [row for row in rows if row["predicted_label"] == "positive"]
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if not positive_rows:
@@ -193,15 +195,17 @@ def plot_positive_inference_grid(
         plt.close(fig)
         return
 
-    cols = min(max_cols, len(positive_rows))
-    rows_count = int(np.ceil(len(positive_rows) / cols))
+    display_rows = positive_rows[:max_images]
+    omitted_count = max(0, len(positive_rows) - len(display_rows))
+    cols = min(max_cols, len(display_rows))
+    rows_count = int(np.ceil(len(display_rows) / cols))
     fig, axes = plt.subplots(rows_count, cols, figsize=(cols * 3.2, rows_count * 3.5))
     axes = np.asarray(axes).reshape(-1)
 
     for axis in axes:
         axis.axis("off")
 
-    for axis, row in zip(axes, positive_rows):
+    for axis, row in zip(axes, display_rows):
         image_path = Path(str(row["image_path"]))
         image = tf.keras.utils.load_img(image_path, color_mode=config.COLOR_MODE, target_size=IMAGE_SIZE)
         axis.imshow(image)
@@ -210,7 +214,10 @@ def plot_positive_inference_grid(
             fontsize=9,
         )
 
-    fig.suptitle("Positive Inference Predictions")
+    title = "Positive Inference Predictions"
+    if omitted_count:
+        title = f"{title} (showing {len(display_rows)} of {len(positive_rows)})"
+    fig.suptitle(title)
     fig.tight_layout()
     fig.savefig(output_path, dpi=220)
     plt.close(fig)
