@@ -1,3 +1,5 @@
+![Aerial view of crosswalks used for pedestrian path classification](docs/assets/readme-hero.png)
+
 # Pedestrian Path Image Classification
 
 Deep learning project for binary image classification: detecting whether an
