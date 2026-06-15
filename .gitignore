@@ -5,8 +5,13 @@ __pycache__/
 .matplotlib_cache/
 .ipynb_checkpoints/
 
-# Local datasets and generated splits are too large for GitHub.
-DeepL_Datenset/
+# Version the original yes/no dataset needed to reproduce the split.
+DeepL_Datenset/*
+!DeepL_Datenset/no/
+!DeepL_Datenset/no/**
+!DeepL_Datenset/yes/
+!DeepL_Datenset/yes/**
+DeepL_Datenset/**/.DS_Store
 dataset/
 
 # Training outputs and model artifacts.
