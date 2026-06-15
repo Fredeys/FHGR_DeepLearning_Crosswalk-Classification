@@ -19,8 +19,8 @@ Current core settings:
 ## Dataset Contribution
 
 The positive class examples were contributed by classmates Sinan, Fabian, Mike,
-Joel, Lars, and Neel. The negative class was manually filtered by Frederick
-Urbel from roughly 20,000 candidate images down to the current dataset.
+Joel, Lars, and Neel. The negative class was manually filtered by Frederic
+Kurbel from roughly 20,000 candidate images down to the current dataset.
 
 ## AI Assistance Disclosure
 
